@@ -5,7 +5,7 @@ ONE of the three error-budget components is actually derived. Calling the
 whole thing "certified" would be a documentation claim unsupported by the
 code. Rename it once all three components in `ErrorBudget` are real.
 
-## Interface (as requested)
+## Interface
 
 ```python
 from engine import ZETA, CHI3, weil_form, galerkin_matrix, certify_positive, certify_negative, C
@@ -20,7 +20,7 @@ C(ZETA, N=4, c=50)
 | --- | --- | --- |
 | `numerical` | **Derived.** Backward-error bound for LDL^T from the tracked elimination growth factor (Higham-style). | Done. |
 | `archimedean` | Not derived. Placeholder `0`. | Bound the quadrature tail beyond `R=sqrt(80/a)` + `mp.quad`'s own discretisation error. Real work, not a quick add. |
-| `prime` | Not derived. Placeholder `0`. | This is not a software task — it's the open question this whole conversation has been circling (de Branges completeness radius / Conrey–Li obstruction territory for this specific construction). Treat as research, not a TODO comment. |
+| `prime` | Not derived. Placeholder `0`. | This is not a software task — it's an open research question (de Branges completeness radius / Conrey–Li obstruction territory for this specific construction). Treat as research, not a TODO comment. |
 
 `C(...)["budget_status"]` says `PARTIAL` for exactly this reason — with two
 of three components at `0`, a "positive" verdict is a genuine lower bound
