@@ -1,7 +1,7 @@
 """
 Weil-Form Computation Engine — minimal, independently-derived, validated core.
 
-Implements the requested interface:
+Public interface:
 weil_form(L_function)
 galerkin_matrix(L_function, N, c)
 tail_certificate(Q)
@@ -13,9 +13,9 @@ This is MY OWN from-scratch implementation of the classical Weil explicit
 formula, independently derived and validated against the first 10 known
 Riemann zeta zeros (see validate_explicit_formula.py — matches to 1e-19
 relative error at moderate test-function width). It is NOT a byte-for-byte
-reproduction of the Connes-van Suijlekom / Connes-Consani-Moscovici /
-Groskin sin-kernel Galerkin recipe discussed earlier in this conversation —
-I do not have their exact D_prime/D_pole normalization from primary source,
+reproduction of the Connes–van Suijlekom / Connes–Consani–Moscovici /
+Groskin sin-kernel Galerkin construction —
+the exact D'/D pole normalization is not taken from primary source,
 only fragments. The basis choice here (Gaussian test functions, closed
 under multiplication) is a different, self-consistent finite-dimensional
 realization of the same Weil-positivity idea, chosen specifically because
@@ -39,9 +39,9 @@ class ErrorBudget:
                           # bound beyond R=sqrt(80/a) + a real discretisation
                           # bound for mp.quad. Set to 0 = placeholder, not "no error".
     prime: mp.mpf          # STATUS: not yet derived, and NOT a quick add.
-                          # This is the open research question (de Branges
-                          # completeness radius / Conrey-Li obstruction
-                          # territory) discussed at length in this session,
+                          # This is an open research question (de Branges
+                          # completeness radius / Conrey–Li obstruction
+                          # territory for this construction),
                           # not a software task. Set to 0 = placeholder.
     numerical: mp.mpf      # STATUS: derived below — backward-error bound
                           # for LDL^T from the observed growth factor.
@@ -77,8 +77,15 @@ def weil_form(L: LFunction):
     def g(u, a):
         return 1 / (2 * mp.sqrt(mp.pi * a)) * mp.e ** (-u * u / (4 * a))
 
+    _cache = {}  # (str(a), int(c)) -> kernel value, per L-function instance.
+                 # Valid as long as mp.mp.dps is unchanged (fixed at import).
+
     def kernel(a, c):
         a = mp.mpf(a)
+        c = int(c)
+        key = (str(a), c)
+        if key in _cache:
+            return _cache[key]
         pole = mp.mpf(0)
         if L.has_pole:
             pole = 2 * mp.e ** (a / 4)
@@ -107,7 +114,9 @@ def weil_form(L: LFunction):
                 if k > 60:
                     break
 
-        return pole + arch - 2 * prime_sum
+        result = pole + arch - 2 * prime_sum
+        _cache[key] = result
+        return result
 
     return kernel
 
@@ -136,9 +145,8 @@ def ldlt(Q):
     growth_factor = max abs entry seen across all elimination steps, divided
     by max abs entry of the original Q. This is the standard quantity that
     backward-error bounds for unpivoted symmetric elimination are stated in
-    terms of (Higham, ASNA, Ch.10) — NOT something GPT's recommendation
-    mentioned, but it's what makes the numerical bound below honest rather
-    than asserted."""
+    terms of (Higham, ASNA, Ch.10) — tracking it is what makes the numerical
+    bound below honest rather than asserted."""
     n = Q.rows
     A = Q.copy()
     max_orig = max(abs(Q[i, j]) for i in range(n) for j in range(n))
